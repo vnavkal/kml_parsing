@@ -132,6 +132,12 @@ def get_fields():
         '2013-2019 Total Gas Location Participation Rate',
         '2013-2019 Total Gas Location Participation Rate Rank',
         '2013-2019 Gas location participation rate percentage points difference from town mean',
+        '2018 Block Group rank ordered by share of income eligible households',
+        '2018 ACS Share of income eligible households',
+        '2018 Block Group rank ordered by share of renter occupied households',
+        '2018 ACS Share of renter occupied households',
+        '2018 Block Group rank ordered by share of limited english proficiency households',
+        '2018 ACS Share of limited english proficiency households',
     )
 
 
