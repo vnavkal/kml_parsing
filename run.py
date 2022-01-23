@@ -11,10 +11,16 @@ def process_kml_file(kml_file_path: pathlib.Path):
     tables = _load_tables(kml_file_path)
 
     kml_file_dir = kml_file_path.parent
-    save_raw_tables_to_csv(tables, kml_file_dir / 'raw_tables.csv')
 
     cleaned_table = _index_by_block_id(tables)
-    save_cleaned_table(cleaned_table, kml_file_dir / 'by_block_id.csv')
+
+    town_entries = cleaned_table['Town'].unique()
+    if len(town_entries) != 1:
+        raise RuntimeError(f'found the following towns in data: {town_entries}')
+    town = town_entries[0]
+
+    save_raw_tables_to_csv(tables, kml_file_dir / f'{town}_raw_tables.csv')
+    save_cleaned_table(cleaned_table, kml_file_dir / f'{town}_by_block_id.csv')
 
 
 def _extract_html_table(html_string):
