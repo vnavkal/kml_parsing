@@ -2,25 +2,32 @@ import argparse
 import csv
 import html
 import pathlib
+import zipfile
 
 from bs4 import BeautifulSoup
 import pandas as pd
 
 
-def process_kml_file(kml_file_path: pathlib.Path):
-    tables = _load_tables(kml_file_path)
+def process_kml_file(data_dir: pathlib.Path):
+    _extract_kmz_files(data_dir)
 
-    kml_file_dir = kml_file_path.parent
+    all_cleaned_tables = []
+    for kml_file_path in data_dir.glob('*/*.kml'):
+        raw_tables = _load_tables(kml_file_path)
 
-    cleaned_table = _index_by_block_id(tables)
+        cleaned_table = _index_by_block_id(raw_tables)
 
-    town_entries = cleaned_table['Town'].unique()
-    if len(town_entries) != 1:
-        raise RuntimeError(f'found the following towns in data: {town_entries}')
-    town = town_entries[0]
+        all_cleaned_tables.append(cleaned_table)
 
-    save_raw_tables_to_csv(tables, kml_file_dir / f'{town}_raw_tables.csv')
-    save_cleaned_table(cleaned_table, kml_file_dir / f'{town}_by_block_id.csv')
+    concatenated_table = pd.concat(all_cleaned_tables, axis=0)
+
+    concatenated_table.to_csv(data_dir / f'processed.csv')
+
+
+def _extract_kmz_files(data_dir):
+    for zip_path in data_dir.glob('*.kmz'):
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(data_dir / zip_path.stem)
 
 
 def _extract_html_table(html_string):
@@ -95,10 +102,6 @@ def _index_by_block_id(tables):
     return df
 
 
-def save_cleaned_table(cleaned_table, output_path):
-    cleaned_table.to_csv(output_path)
-
-
 def save_raw_tables_to_csv(tables, output_path):
     with open(output_path, 'w') as csvfile:
         for title, table in tables:
@@ -155,11 +158,11 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        '--kml_path',
+        '--data_dir',
         type=pathlib.Path,
         required=True,
-        help='path to kml file (typically called \'doc.kml\')',
+        help='path to directory containing .kmz files',
     )
 
     args = parser.parse_args()
-    process_kml_file(args.kml_path)
+    process_kml_file(args.data_dir)
